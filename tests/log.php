@@ -10,8 +10,8 @@ require "../vendor/autoload.php";
 
 use EagleEye\Classes\Log;
 
-Log::write("this is debug message,direct write to [date >] log file",'../log/fend/fend.log',1);
-Log::rawwrite("this is debug message,direct write to log file",'../log/fend/fend.log',1);
+Log::write("this is debug message,direct write to [date >] log file",'./logs/fend/fend.log',1);
+Log::rawwrite("this is debug message,direct write to log file",'./logs/fend/fend.log',1);
 
 Log::setLogLevel(Log::LOG_TYPE_DEBUG);
 
