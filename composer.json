@@ -9,8 +9,8 @@
     },
     "autoload": {
         "psr-4": {
-            "EagleEye\\Core\\": "core",
-            "EagleEye\\Classes\\": "classes"
+            "EagleEye\\Core\\": "src/core",
+            "EagleEye\\Classes\\": "src/classes"
         }
     }
 }
