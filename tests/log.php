@@ -14,6 +14,8 @@ Log::write("this is debug message,direct write to [date >] log file",'../log/fen
 Log::rawwrite("this is debug message,direct write to log file",'../log/fend/fend.log',1);
 
 Log::setLogLevel(Log::LOG_TYPE_DEBUG);
+
+// FILE 和 LINE 可以任意选择填写与否
 Log::debug("EagleEye","eagle eye log -- debug",__FILE__,__LINE__);
 Log::trace("EagleEye","eagle eye log -- trace");
 Log::notice("EagleEye","eagle eye log -- notice",__FILE__,__LINE__);
