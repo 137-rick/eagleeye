@@ -1,8 +1,8 @@
 {
-    "name": "root/eagleeye",
+    "name": "xcl3721/eagleeye",
     "description": "EagleEye Log",
     "type": "project",
-    "license": "Apache License 2.0",
+    "license": "Apache-2.0",
     "minimum-stability": "dev",
     "require": {
         "php": ">=5.3.0"
