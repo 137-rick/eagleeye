@@ -78,7 +78,7 @@ class EagleEye
     {
         if (trim($key) != "") {
             if (in_array($key, array("uid", "code", "client_ip", "action", "source", "user_agent", "param", "response",
-                                     "response_length", "msg"))) {
+                "response_length", "msg"))) {
                 self::$_context[$key] = $val . "";
             } else {
                 self::$_extra_context[$key] = $val;
@@ -90,9 +90,10 @@ class EagleEye
      * 批量设置当前请求变量使用
      * @param array $batchLogs
      */
-    public static function batchSetRequestLogInfo($batchLogs) {
+    public static function batchSetRequestLogInfo($batchLogs)
+    {
         foreach ($batchLogs as $key => $val) {
-            self::setRequestLogInfo($key,$val);
+            self::setRequestLogInfo($key, $val);
         }
     }
 
@@ -100,7 +101,7 @@ class EagleEye
     {
         if (trim($key) != "") {
             if (in_array($key, array("uid", "code", "client_ip", "action", "source", "user_agent", "param", "response",
-                                     "response_length", "msg"))) {
+                "response_length", "msg"))) {
                 if (isset(self::$_context[$key])) {
                     return self::$_context[$key];
                 }
@@ -112,7 +113,8 @@ class EagleEye
         return self::$_extra_context;
     }
 
-    public static function resetRequestLogInfo(){
+    public static function resetRequestLogInfo()
+    {
         self::$_context = array();
         self::$_extra_context = array();
     }
@@ -137,11 +139,11 @@ class EagleEye
     /**
      * 初始化相关参数
      */
-    public static function init($serverIp) {
+    public static function init($serverIp)
+    {
         if (empty($serverIp)) {
             self::$_server_ip = "0.0.0.0";
-        }
-        else {
+        } else {
             self::$_server_ip = $serverIp;
         }
     }
@@ -151,7 +153,7 @@ class EagleEye
      * @param string $trace_id 如果其他接口传递过来traceid设置此值
      * @param string $rpc_id 如果其他接口传递过来rpcid 设置此值
      */
-    public static function requestStart($trace_id = "", $rpc_id = "",$serverIp = "")
+    public static function requestStart($trace_id = "", $rpc_id = "", $serverIp = "")
     {
         self::init($serverIp);
 
@@ -250,7 +252,7 @@ class EagleEye
         }
 
         //format input log
-        $log = self::formatLog(array_merge($log,$param));
+        $log = self::formatLog(array_merge($log, $param));
 
         //record log
         self::recordlog($log);
@@ -299,7 +301,7 @@ class EagleEye
             $log["x_extra"]["unknow"] = $unknow_field;
             $format_log["x_extra"] = json_encode($log["x_extra"]);
         } else if (isset($log["x_extra"]) && is_string($log["x_extra"])) {
-            $log["x_extra"] = json_decode($log["x_extra"],true);
+            $log["x_extra"] = json_decode($log["x_extra"], true);
             $log["x_extra"]["unknow"] = $unknow_field;
             $format_log["x_extra"] = json_encode($log["x_extra"]);
         } else {
@@ -321,7 +323,7 @@ class EagleEye
     public static function getLocalIp()
     {
         if (isset($_SERVER)) {
-            if($_SERVER['SERVER_ADDR']) {
+            if ($_SERVER['SERVER_ADDR']) {
                 $server_ip = $_SERVER['SERVER_ADDR'];
             } else {
                 $server_ip = $_SERVER['LOCAL_ADDR'];

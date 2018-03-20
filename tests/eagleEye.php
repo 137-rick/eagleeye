@@ -28,7 +28,6 @@ EagleEye::setRequestLogInfo("response_length", strlen($string));
 EagleEye::requestFinished();
 
 
-
 EagleEye::requestStart($traceid, $rpcid);
 $infos = [
     "client_ip" => "127.0.0.1",
