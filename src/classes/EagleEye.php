@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class EagleEye
  * 分布式链路 跟踪类
@@ -78,7 +79,7 @@ class EagleEye
     {
         if (trim($key) != "") {
             if (in_array($key, array("uid", "code", "client_ip", "action", "source", "user_agent", "param", "response",
-                "response_length", "msg"))) {
+                                     "response_length", "msg", "backtrace"))) {
                 self::$_context[$key] = $val . "";
             } else {
                 self::$_extra_context[$key] = $val;
@@ -101,7 +102,7 @@ class EagleEye
     {
         if (trim($key) != "") {
             if (in_array($key, array("uid", "code", "client_ip", "action", "source", "user_agent", "param", "response",
-                "response_length", "msg"))) {
+                                     "response_length", "msg", "backtrace"))) {
                 if (isset(self::$_context[$key])) {
                     return self::$_context[$key];
                 }
@@ -201,7 +202,7 @@ class EagleEye
             "x_name" => "request.info",
             "x_version" => self::$_version,
             "x_trace_id" => self::$_trace_id,
-            "x_rpc_id" => self::getReciveRpcId(),
+            "x_rpc_id" => self::getReciveRpcId().".1",
             "x_department" => self::$_department,
             "x_server_ip" => self::getServerIp(),
             "x_timestamp" => (int)self::$_start_timestamp,
@@ -234,14 +235,14 @@ class EagleEye
 
         //set at first
         $log = array(
-            "x_version" => self::$_version,
-            "x_trace_id" => self::$_trace_id,
-            "x_department" => self::$_department,
-            "x_server_ip" => self::getServerIp(),
-            "x_timestamp" => time(),
-            "x_pid" => getmypid(),
-            "x_uid" => self::getRequestLogInfo("uid"),
-            "x_client_ip" => self::getRequestLogInfo("client_ip"),
+            "x_version"     => self::$_version,
+            "x_trace_id"    => self::$_trace_id,
+            "x_department"  => self::$_department,
+            "x_server_ip"   => self::getServerIp(),
+            "x_timestamp"   => time(),
+            "x_pid"         => getmypid(),
+            "x_uid"         => self::getRequestLogInfo("uid"),
+            "x_client_ip"   => self::getRequestLogInfo("client_ip"),
         );
 
         //rpc id value decide
@@ -252,7 +253,7 @@ class EagleEye
         }
 
         //format input log
-        $log = self::formatLog(array_merge($log, $param));
+        $log = self::formatLog(array_merge($log,$param));
 
         //record log
         self::recordlog($log);
@@ -301,7 +302,7 @@ class EagleEye
             $log["x_extra"]["unknow"] = $unknow_field;
             $format_log["x_extra"] = json_encode($log["x_extra"]);
         } else if (isset($log["x_extra"]) && is_string($log["x_extra"])) {
-            $log["x_extra"] = json_decode($log["x_extra"], true);
+            $log["x_extra"] = json_decode($log["x_extra"],true);
             $log["x_extra"]["unknow"] = $unknow_field;
             $format_log["x_extra"] = json_encode($log["x_extra"]);
         } else {
