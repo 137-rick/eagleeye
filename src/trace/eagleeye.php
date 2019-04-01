@@ -5,7 +5,7 @@
  * 分布式链路 跟踪类
  */
 
-namespace EagleEye\Classes;
+namespace EagleEye\Trace;
 
 class EagleEye
 {
@@ -14,8 +14,8 @@ class EagleEye
 
     //set at first
     static $_server_ip = "";
-    static $_version = "php-0.1";
-    static $_department = "tal_dt_php";
+    static $_version = "php-1.5";
+    static $_department = "wheatstone";
 
     //running parameter
     //must reset every request

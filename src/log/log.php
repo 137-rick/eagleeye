@@ -4,7 +4,7 @@
  * 分布式链路 日志类
  */
 
-namespace EagleEye\Classes;
+namespace EagleEye\Log;
 
 class Log
 {

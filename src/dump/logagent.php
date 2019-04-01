@@ -1,18 +1,26 @@
 <?php
 
+namespace EagleEye\Dump;
 /**
  * Class LogAgent
  * 日志统一dump类
  */
 
-namespace EagleEye\Core;
-
-class LogAgent
+class Fend_LogAgent
 {
+    //直接落地磁盘
+    const LOGAGENT_DUMP_LOG_MODE_DIERECT= 0;
 
-    //最大 mode = 2 时，dump 日志阀值，当暂存日志超过这个数量后马上开始 dump
+    //缓存日志内容，fpm处理结束后落地
+    const LOGAGENT_DUMP_LOG_MODE_BUFFER = 1;
+
+    //Swoole服务，多进程汇总到Channel后独立进程落地
+    const LOGAGENT_DUMP_LOG_MODE_CHANNEL = 2;
+
+    //最大dump日志阀值，当暂存日志超过这个数立刻dump
     const MAX_LOG_DUMP_COUNT = 20;
 
+    //初始化标志
     static $isinit = 0;
 
     static $dumplogmode = 0; //日志落地模式 0 直接写入文件。1 缓存定期写入文件。2 dump到channel 异步写入文件
@@ -21,17 +29,16 @@ class LogAgent
 
     static $logTempArray = array();
 
-    public static $dumppath = "logs/eagleeye/";//default dump path
+    private static $dumppath = "eagleeye";//default dump path
 
     /**
-     * 日志初始化
+     * 日志设置日志路径，必须绝对路径
      * @param string $logpath
-     * @throws Exception 启动模式和运行模式不匹配时会抛异常
      */
-    public static function setLogPath($dumpPath)
+    public static function setLogPath($logpath)
     {
         //log dump path
-        self::$dumppath = $dumpPath;
+        self::$dumppath = $logpath;
     }
 
     /**
@@ -49,7 +56,7 @@ class LogAgent
 
         //buffer log
         if ($mode == 1) {
-            register_shutdown_function(array("EagleEye_LogAgent", "memoryDumpLog"));
+            register_shutdown_function(array("Fend_LogAgent", "memoryDumpLog"));
             return;
         }
 
@@ -60,12 +67,11 @@ class LogAgent
             if (self::$channel == null) {
                 self::$channel = new \swoole_channel(256 * 1024 * 1024);
             }
-
             //not cli mode wrong
             if (php_sapi_name() != "cli") {
                 echo "The LogAgent Mode 3 Only Run on Swoole Cli Mode..";
 
-                throw new \Exception("The LogAgent Mode 3 Only Run on Swoole Cli Mode..", 11112);
+                throw new Exception("The LogAgent Mode 3 Only Run on Swoole Cli Mode..", 11112);
             }
             return;
         }
@@ -82,6 +88,7 @@ class LogAgent
     }
 
 
+
     /**
      * 根据不同的日志记录模式
      * 0 直接写入模式
@@ -94,14 +101,20 @@ class LogAgent
      */
     public static function log($log)
     {
+
         if (self::$dumplogmode == 0) {
             //direct dump log file
-            file_put_contents(self::$dumppath . "/" . date("Y-m-d") . "_" . php_sapi_name() . ".log", json_encode($log) . "\n", FILE_APPEND);
+            if( !is_dir(  self::$dumppath . "/")){
+                mkdir(  self::$dumppath . "/",0777,1);
+            }
 
+            $filename = self::genFileName();
+
+            file_put_contents(self::$dumppath . "/" . $filename, json_encode($log) . "\n", FILE_APPEND);
+            chmod($filename, fileperms($filename) | 128 + 16 + 2);
         } else if (self::$dumplogmode == 1) {
             //dump to the memory
             self::$logTempArray[] = $log;
-
             if (count(self::$logTempArray) > self::MAX_LOG_DUMP_COUNT) {
                 self::memoryDumpLog();
             }
@@ -110,7 +123,7 @@ class LogAgent
             self::$channel->push($log);
         } else {
             echo "Log Agent不支持的日志落地模式！";
-            throw new \Exception("不支持的日志落地模式！", 111111);
+            throw new Exception("不支持的日志落地模式！", 111111);
         }
     }
 
@@ -125,7 +138,10 @@ class LogAgent
         foreach (self::$logTempArray as $logItem) {
             $logStr .= (json_encode($logItem) . "\n");
         }
-        file_put_contents(self::$dumppath . "/" . date("Y-m-d") . "_" . php_sapi_name() . ".log", $logStr, FILE_APPEND);
+
+        $filename = self::genFileName();
+
+        file_put_contents(self::$dumppath . "/" . $filename, $logStr, FILE_APPEND);
         self::$logTempArray = array();
     }
 
@@ -140,13 +156,15 @@ class LogAgent
         //logagent buffer
         if (self::$channel == null) {
             echo "Logagent Dump Log must run befor change mode";
-            throw new \Exception("Logagent Dump Log must run befor change mode", 11113);
+            throw new Exception("Logagent Dump Log must run befor change mode", 11113);
         }
 
         //dump the log to the local
         $logcount = 0;
         $logstr = "";
         $startime = microtime(true);
+
+        $filename = self::genFileName();
 
         while (true) {
             $log = self::$channel->pop();
@@ -160,10 +178,12 @@ class LogAgent
             }
 
             //logcount大于阀值 || 过去时间3秒 dump日志
-            if ($logcount > self::MAX_LOG_DUMP_COUNT || microtime(true) - $startime > 3) {
+            if (($logcount > self::MAX_LOG_DUMP_COUNT || microtime(true) - $startime > 3) && $logcount>0) {
+                if(!file_exists( self::$dumppath . "/")){
+                    mkdir( self::$dumppath . "/",0777,1);
+                }
 
-                file_put_contents(self::$dumppath . "/" . date("Y-m-d") . "_swoole" . ".log", $logstr, FILE_APPEND);
-
+                file_put_contents(self::$dumppath . "/" . $filename, $logstr, FILE_APPEND);
                 $logcount = 0;
                 $logstr = "";
                 $startime = microtime(true);
@@ -175,23 +195,24 @@ class LogAgent
     /**
      * 一次性将 channel 中的日志全部 dump 到日志文件中
      * */
-    public static function flushChannel()
-    {
+    public static function flushChannel() {
+        $filename = self::genFileName();
+
         if (self::$dumplogmode == 2) {
             $count = 0;
             $bulkContent = '';
             while ($log = self::$channel->pop()) {
                 $bulkContent = $bulkContent . PHP_EOL . json_encode($log);
-                $count++;
-                if ($count > self::MAX_LOG_DUMP_COUNT) {
+                $count ++;
+                if($count > self::MAX_LOG_DUMP_COUNT) {
                     $count = 0;
-                    file_put_contents(self::$dumppath . "/" . date("Y-m-d") . "_swoole" . ".log", $bulkContent, FILE_APPEND);
+                    file_put_contents(self::$dumppath . "/" . $filename, $bulkContent, FILE_APPEND);
                     $bulkContent = '';
                     usleep(100);
                 }
             }
-            if (!empty($bulkContent)) {
-                file_put_contents(self::$dumppath . "/" . date("Y-m-d") . "_swoole" . ".log", $bulkContent, FILE_APPEND);
+            if(! empty($bulkContent)) {
+                file_put_contents( self::$dumppath . "/" . $filename, $bulkContent, FILE_APPEND);
             }
         }
     }
