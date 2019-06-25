@@ -36,7 +36,7 @@ class Log
      * 写入日志
      * 老方式，留着兼容
      * @param  array|string $msg 日志内容
-     * @param  string $file 文件名
+     * @param  string $dumpFile 文件名
      * @param  int $debug 是否直接显示，0不显示，1直接抛出
      * @return void
      **/
@@ -57,7 +57,7 @@ class Log
     /**
      * 书写原始日志文件
      * @param $msg
-     * @param string $file
+     * @param string $dumpFile
      * @param int $debug
      */
     public static function rawwrite($msg, $dumpFile = './logs/fend/fend.log', $debug = 0)
@@ -93,7 +93,7 @@ class Log
      * debug 日志输出,用于线下寻找bug使用，日志量很多 平时不要开
      * @param string $tag 标识符，可以用module_function_action 形式
      * @param string $file 文件路径可以使用__FILE__作为传入
-     * @param int $line 当前产生日志的代码行数，可以使用__LINE__
+     * @param string $line 当前产生日志的代码行数，可以使用__LINE__
      * @param string $msg 警报文字原因
      * @param array $extra 附加数据
      */
@@ -117,7 +117,7 @@ class Log
      * trace 跟踪信息,用于线下数据过程变量内容输出，日志量很多 平时不要开
      * @param string $tag 标识符，可以用module_function_action 形式
      * @param string $file 文件路径可以使用__FILE__作为传入
-     * @param int $line 当前产生日志的代码行数，可以使用__LINE__
+     * @param string $line 当前产生日志的代码行数，可以使用__LINE__
      * @param string $msg 警报文字原因
      * @param array $extra 附加数据
      */
@@ -140,7 +140,7 @@ class Log
      * 注意信息,用于线上线下警告数据，生产环境推荐开到info
      * @param string $tag 标识符，可以用module_function_action 形式
      * @param string $file 文件路径可以使用__FILE__作为传入
-     * @param int $line 当前产生日志的代码行数，可以使用__LINE__
+     * @param string $line 当前产生日志的代码行数，可以使用__LINE__
      * @param string $msg 警报文字原因
      * @param array $extra 附加数据
      */
@@ -163,7 +163,7 @@ class Log
      * 提示信息，用于一些需要注意的日志信息
      * @param string $tag 标识符，可以用module_function_action 形式
      * @param string $file 文件路径可以使用__FILE__作为传入
-     * @param int $line 当前产生日志的代码行数，可以使用__LINE__
+     * @param string $line 当前产生日志的代码行数，可以使用__LINE__
      * @param string $msg 警报文字原因
      * @param array $extra 附加数据
      */
@@ -186,7 +186,7 @@ class Log
      * 线上错误信息
      * @param string $tag 标识符，可以用module_function_action 形式
      * @param string $file 文件路径可以使用__FILE__作为传入
-     * @param int $line 当前产生日志的代码行数，可以使用__LINE__
+     * @param string $line 当前产生日志的代码行数，可以使用__LINE__
      * @param string $msg 警报文字原因
      * @param array $extra 附加数据
      */
@@ -209,7 +209,7 @@ class Log
      * 线上警报信息，后续会对这个进行合并发送警报邮件
      * @param string $tag 标识符，可以用module_function_action 形式
      * @param string $file 文件路径可以使用__FILE__作为传入
-     * @param int $line 当前产生日志的代码行数，可以使用__LINE__
+     * @param string $line 当前产生日志的代码行数，可以使用__LINE__
      * @param string $msg 警报文字原因
      * @param array $extra 附加数据
      */
@@ -232,7 +232,7 @@ class Log
      * 线上警报信息，后续会对这个进行合并发送警报邮件
      * @param string $tag 标识符，可以用module_function_action 形式
      * @param string $file 文件路径可以使用__FILE__作为传入
-     * @param int $line 当前产生日志的代码行数，可以使用__LINE__
+     * @param string $line 当前产生日志的代码行数，可以使用__LINE__
      * @param string $msg 具体信息，请使用数组
      * @param string $code 错误码
      * @param string $backtrace 具体错误信息
@@ -289,7 +289,7 @@ class Log
 
         $log["x_extra"] = json_encode($extraList);
 
-        \EagleEye\Core\LogAgent::log($log);
+        \EagleEye\Dump\LogAgent::log($log);
     }
 
 

@@ -1,12 +1,13 @@
 <?php
 
 namespace EagleEye\Dump;
+
 /**
  * Class LogAgent
+ * @package EagleEye\Dump
  * 日志统一dump类
  */
-
-class Fend_LogAgent
+class LogAgent
 {
     //直接落地磁盘
     const LOGAGENT_DUMP_LOG_MODE_DIERECT= 0;
@@ -44,7 +45,7 @@ class Fend_LogAgent
     /**
      * 更改日志dump 模式
      * @param $mode 0 直接写入文件，1 缓存定期dump 2  swoole下多进程 channel
-     * @throws Exception
+     * @throws \Exception
      */
     public static function setDumpLogMode($mode)
     {
@@ -56,7 +57,7 @@ class Fend_LogAgent
 
         //buffer log
         if ($mode == 1) {
-            register_shutdown_function(array("Fend_LogAgent", "memoryDumpLog"));
+            register_shutdown_function(array("\EagleEye\Dump\LogAgent", "memoryDumpLog"));
             return;
         }
 
@@ -65,13 +66,13 @@ class Fend_LogAgent
 
             //logagent buffer
             if (self::$channel == null) {
-                self::$channel = new \swoole_channel(256 * 1024 * 1024);
+                self::$channel = new \Swoole\Channel(256 * 1024 * 1024);
             }
             //not cli mode wrong
             if (php_sapi_name() != "cli") {
                 echo "The LogAgent Mode 3 Only Run on Swoole Cli Mode..";
 
-                throw new Exception("The LogAgent Mode 3 Only Run on Swoole Cli Mode..", 11112);
+                throw new \Exception("The LogAgent Mode 3 Only Run on Swoole Cli Mode..", 11112);
             }
             return;
         }
@@ -87,7 +88,13 @@ class Fend_LogAgent
         return self::$channel->stats();
     }
 
-
+    /**
+     * 日志文件名生成规则
+     * @return string
+     */
+    public static function genFileName(){
+        return date("Ymd") . ".log";
+    }
 
     /**
      * 根据不同的日志记录模式
@@ -97,7 +104,7 @@ class Fend_LogAgent
      * 目前这个设置在changeMode函数
      *
      * @param array $log
-     * @throws Exception 日志工作模式错误会抛出异常
+     * @throws \Exception 日志工作模式错误会抛出异常
      */
     public static function log($log)
     {
@@ -111,7 +118,7 @@ class Fend_LogAgent
             $filename = self::genFileName();
 
             file_put_contents(self::$dumppath . "/" . $filename, json_encode($log) . "\n", FILE_APPEND);
-            chmod($filename, fileperms($filename) | 128 + 16 + 2);
+            chmod($filename, 0665);
         } else if (self::$dumplogmode == 1) {
             //dump to the memory
             self::$logTempArray[] = $log;
@@ -123,7 +130,7 @@ class Fend_LogAgent
             self::$channel->push($log);
         } else {
             echo "Log Agent不支持的日志落地模式！";
-            throw new Exception("不支持的日志落地模式！", 111111);
+            throw new \Exception("不支持的日志落地模式！", 111111);
         }
     }
 
@@ -156,7 +163,7 @@ class Fend_LogAgent
         //logagent buffer
         if (self::$channel == null) {
             echo "Logagent Dump Log must run befor change mode";
-            throw new Exception("Logagent Dump Log must run befor change mode", 11113);
+            throw new \Exception("Logagent Dump Log must run befor change mode", 11113);
         }
 
         //dump the log to the local
