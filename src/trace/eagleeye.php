@@ -72,6 +72,7 @@ class EagleEye
 
     /**
      * 设置当前请求变量使用，会在被请求完毕后产生一条日志,此用于记录每次被请求情况的附加和可选参数的设置
+     * 所有日志都会带上这些参数
      * @param string $key 可选项目 uid code client_ip action source user_agent param 非此选项则会记录在日志extra字段内
      * @param string $val 值内容
      */
@@ -88,7 +89,7 @@ class EagleEye
     }
 
     /**
-     * 批量设置当前请求变量使用
+     * 批量设置当前附加变量
      * @param array $batchLogs
      */
     public static function batchSetRequestLogInfo($batchLogs)
@@ -121,7 +122,7 @@ class EagleEye
     }
 
     /**
-     * 特殊情况下禁用eagle eye日志
+     * 特殊情况下禁用trace日志
      * @param bool $disable 设置为true禁用，false启用
      */
     public static function disable($disable = true)
@@ -130,7 +131,7 @@ class EagleEye
     }
 
     /**
-     * 开启 eagle eye 日志
+     * 开启 trace 日志
      */
     public static function allow()
     {
@@ -460,7 +461,7 @@ class EagleEye
     private static function recordlog($log)
     {
         if (!self::$_disable) {
-            \EagleEye\Core\LogAgent::log($log);
+            \EagleEye\Dump\LogAgent::log($log);
         }
     }
 

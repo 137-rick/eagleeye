@@ -21,7 +21,7 @@ class LogAgent
     //最大dump日志阀值，当暂存日志超过这个数立刻dump
     const MAX_LOG_DUMP_COUNT = 20;
 
-    //初始化标志
+    //初始化标志,此类只初始化一次
     static $isinit = 0;
 
     static $dumplogmode = 0; //日志落地模式 0 直接写入文件。1 缓存定期写入文件。2 dump到channel 异步写入文件

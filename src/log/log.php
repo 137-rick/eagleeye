@@ -1,7 +1,7 @@
 <?php
 /**
  * Class Log
- * 分布式链路 日志类
+ * 分布式链路 分级日志
  */
 
 namespace EagleEye\Log;
@@ -34,13 +34,13 @@ class Log
 
     /**
      * 写入日志
-     * 老方式，留着兼容
+     * 老方式，留着兼容，这个方式是作为一些特殊业务日志用的
      * @param  array|string $msg 日志内容
      * @param  string $dumpFile 文件名
      * @param  int $debug 是否直接显示，0不显示，1直接抛出
      * @return void
      **/
-    public static function write($msg, $dumpFile = './logs/fend/fend.log', $debug = 0)
+    public static function write($msg, $dumpFile = './logs/common/common.log', $debug = 0)
     {
         // 将数据转换为字符串
         is_array($msg) && $msg = var_export($msg, true);
@@ -55,12 +55,12 @@ class Log
     }
 
     /**
-     * 书写原始日志文件
+     * 书写原始日志文件，输入是什么就输出什么，数组会转成字符串
      * @param $msg
      * @param string $dumpFile
      * @param int $debug
      */
-    public static function rawwrite($msg, $dumpFile = './logs/fend/fend.log', $debug = 0)
+    public static function rawwrite($msg, $dumpFile = './logs/raw/raw.log', $debug = 0)
     {
         // 将数据转换为字符串
         is_array($msg) && $msg = var_export($msg, true);
@@ -76,7 +76,7 @@ class Log
 
     /**
      * 设置当前系统最低记录日志级别
-     * @param $level
+     * @param int $level 日志级别，建议使用本类常量
      */
     public static function setLogLevel($level)
     {
@@ -99,6 +99,7 @@ class Log
      */
     public static function debug($tag, $msg, $file = "", $line = "", $extra = array())
     {
+        //如果没有写line和file自己检测，不过性能不好
         if ($file == "" || $line == "") {
             $trace = debug_backtrace();
             $index = count($trace) - 1;
@@ -123,6 +124,7 @@ class Log
      */
     public static function trace($tag, $msg, $file = "", $line = "", $extra = array())
     {
+        //如果没有写line和file自己检测，不过性能不好
         if ($file == "" || $line == "") {
             $trace = debug_backtrace();
             $index = count($trace) - 1;
@@ -146,6 +148,7 @@ class Log
      */
     public static function notice($tag, $msg, $file = "", $line = "", $extra = array())
     {
+        //如果没有写line和file自己检测，不过性能不好
         if ($file == "" || $line == "") {
             $trace = debug_backtrace();
             $index = count($trace) - 1;
@@ -169,6 +172,7 @@ class Log
      */
     public static function info($tag, $msg, $file = "", $line = "", $extra = array())
     {
+        //如果没有写line和file自己检测，不过性能不好
         if ($file == "" || $line == "") {
             $trace = debug_backtrace();
             $index = count($trace) - 1;
@@ -192,6 +196,7 @@ class Log
      */
     public static function error($tag, $msg, $file = "", $line = "", $extra = array())
     {
+        //如果没有写line和file自己检测，不过性能不好
         if ($file == "" || $line == "") {
             $trace = debug_backtrace();
             $index = count($trace) - 1;
@@ -215,6 +220,7 @@ class Log
      */
     public static function alarm($tag, $msg, $file = "", $line = "", $extra = array())
     {
+        //如果没有写line和file自己检测，不过性能不好
         if ($file == "" || $line == "") {
             $trace = debug_backtrace();
             $index = count($trace) - 1;
@@ -233,13 +239,14 @@ class Log
      * @param string $tag 标识符，可以用module_function_action 形式
      * @param string $file 文件路径可以使用__FILE__作为传入
      * @param string $line 当前产生日志的代码行数，可以使用__LINE__
-     * @param string $msg 具体信息，请使用数组
+     * @param string $msg 具体错误信息
      * @param string $code 错误码
      * @param string $backtrace 具体错误信息
      * @param array $extra 附加数据
      */
     public static function exception($tag, $msg, $file = "", $line = "", $code = "", $backtrace = "", $extra = array())
     {
+        //如果没有写line和file自己检测，不过性能不好
         if ($file == "" || $line == "") {
             $trace = debug_backtrace();
             $index = count($trace) - 1;
@@ -254,18 +261,19 @@ class Log
     private static function recordLog($logname, $tag, $file, $line, $msg, $extra = array())
     {
 
+        //错误信息如果是数组，那么会强转json
         if (is_array($msg)) {
             $msg = json_encode($msg);
         }
 
         $log = array(
             "x_name" => $logname,
-            "x_trace_id" => EagleEye::getTraceId(),
-            "x_rpc_id" => EagleEye::getCurrentRpcId(),
-            "x_version" => EagleEye::getVersion(),
+            "x_trace_id" => \EagleEye\Trace\EagleEye::getTraceId(),
+            "x_rpc_id" => \EagleEye\Trace\EagleEye::getCurrentRpcId(),
+            "x_version" => \EagleEye\Trace\EagleEye::getVersion(),
             "x_timestamp" => time(),
             "x_module" => $tag,
-            "x_uid" => EagleEye::getRequestLogInfo("uid"),
+            "x_uid" => \EagleEye\Trace\EagleEye::getRequestLogInfo("uid"),
             "x_pid" => getmypid(),
             "x_file" => basename($file),
             "x_line" => $line,
@@ -274,12 +282,14 @@ class Log
 
         $extraList = array();
 
+        //非指定常量，那么会放到extra里面
         if ($extra) {
             //addtional log
             foreach ($extra as $key => $val) {
                 if (in_array($key, array("duration", "code", "backtrace", "dns_duration", "source", "uid", "server_ip",
                     "client_ip", "user_agent", "host", "instance_name", "db", "action", "param",
                     "response", "response_length"))) {
+                    //为了防止和业务名称重复，固定字段都必须有x_前缀
                     $log["x_" . $key] = $val;
                 } else {
                     $extraList[$key] = $val;
@@ -297,28 +307,28 @@ class Log
     {
         switch ($level) {
             case 1:
-                return "debug";
+                return "log.debug";
                 break;
             case 2:
-                return "trace";
+                return "log.trace";
                 break;
             case 3:
-                return "notice";
+                return "log.notice";
                 break;
             case 4:
-                return "info";
+                return "log.info";
                 break;
             case 5:
-                return "error";
+                return "log.error";
                 break;
             case 6:
-                return "alarm";
+                return "log.alarm";
                 break;
             case 7:
-                return "exception";
+                return "log.exception";
                 break;
             default:
-                return "unknow:" . $level;
+                return "log.unknow:" . $level;
         }
     }
 }
